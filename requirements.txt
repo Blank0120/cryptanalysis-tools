@@ -1,0 +1,4 @@
+gmssl==3.2.2
+numpy==2.1.0
+pycryptodomex==3.20.0
+tinyec==0.4.0
