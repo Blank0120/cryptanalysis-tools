@@ -54,6 +54,8 @@ class SM2(object):
 
     def verify(self, signature: asn1_str, data: bytes, public_key: Tuple[int, int]):
         r, s = DerSequence().decode(bytes.fromhex(signature))
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+            raise Exception("invalid signature")
 
         public_key_point = ec.Point(self.curve, public_key[0], public_key[1])
 
@@ -173,3 +175,34 @@ class SM2(object):
             raise Exception("invalid cipher text c3, u != c3")
 
         return plain_txt
+
+    def recover_privateKey_by_kAndrs(self, k: int, r: int, s: int):
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+            raise Exception("invalid signature")
+        # d = (k-s)(r + s)^-1 mod n
+        return (k - s) * pow(r + s, -1, self.curve.field.n) % self.curve.field.n
+
+    def recover_privateKey_by_fixedk_and_2rs(self, r1: int, s1: int, r2: int, s2: int):
+        if (
+            r1 < 1
+            or r1 > self.curve.field.n - 1
+            or s1 < 1
+            or s1 > self.curve.field.n - 1
+        ):  # type: ignore
+            raise Exception("invalid signature r1 s1")
+        if (
+            r2 < 1
+            or r2 > self.curve.field.n - 1
+            or s2 < 1
+            or s2 > self.curve.field.n - 1
+        ):  # type: ignore
+            raise Exception("invalid signature r2 s2")
+        # r = x1 + e mod n
+        # k = s + (r + s) d mod n
+        # s1 + (r1 + s1) d = s2 + (r2 + s2) d mod n
+        # s1 - s2 = (r2 + s2 - r1 - s1) d mod n
+        return (
+            (s1 - s2)
+            * pow(r2 + s2 - r1 - s1, -1, self.curve.field.n)
+            % self.curve.field.n
+        )
