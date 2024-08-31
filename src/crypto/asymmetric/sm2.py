@@ -1,7 +1,8 @@
 import random
-from typing import Tuple
+from typing import List, Tuple
 
 from Cryptodome.Util.asn1 import DerInteger, DerOctetString, DerSequence
+from sympy import sqrt_mod
 from tinyec import ec
 
 from ..hash import sm3
@@ -206,3 +207,29 @@ class SM2(object):
             * pow(r2 + s2 - r1 - s1, -1, self.curve.field.n)
             % self.curve.field.n
         )
+
+    def recover_publicKeys_by_eAndrs(self, e: int, r: int, s: int):
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+            raise Exception("invalid signature")
+
+        x1: int = (r - e) % self.curve.field.n
+        # () is necessary
+        square_y = (x1**3 + self.curve.a * x1 + self.curve.b) % self.curve.field.p
+        y1_roots = sqrt_mod(square_y, self.curve.field.p, True)
+        if y1_roots is None:
+            raise Exception("y1's value is None")
+        elif type(y1_roots) is int:
+            y1_roots = [y1_roots]
+
+        public_keys: List[Tuple[int, int]] = []
+        t = (r + s) % self.curve.field.n
+        t_1 = pow(t, -1, self.curve.field.n)
+        for y1 in y1_roots:  # type: ignore
+            K = ec.Point(self.curve, x1, y1)
+            # assert K.on_curve
+            # t = r + s mod n
+            # K = sG + tP
+            public_key = t_1 * (K - s * self.curve.g)
+            public_keys.append((public_key.x, public_key.y))
+        # so you can use diffterent public key to verify the same signature
+        return public_keys
