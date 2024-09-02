@@ -19,6 +19,13 @@ class TestSM2(unittest.TestCase):
             0x32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C7,
             0xBC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0,
         )
+        self.private_key2 = (
+            0x08686EDC7F9CDE89AD201587F7A813F6502ACA801393B6FE192BC7A0D77D4F8D
+        )
+        self.public_key2 = (
+            0x44143060D58A126D69AB606C3AB14E7479474FE3ACEEA8F35C5C1525D5D8893E,
+            0x0BD10636AE04EBE00D02A0263AFB226C51B003788B98EA1824E695DBD3AE5398,
+        )
 
     def test_sign_with_sm3(self):
         signature = self.sm2.sign_with_sm3(
@@ -127,3 +134,25 @@ class TestSM2(unittest.TestCase):
         r1 = 0x1260185C3D7437E6A63F1E18FD810A314A5E27D67884A83F1283D72F1009F699
         r2 = 0x1ABAB698181BF3B65DA2C2C0AA1D53ECE519609BFAA9D75C18277CDB5C794B49
         self.assertTrue(self.sm2.is_same_k(r1, e1, r2, e2))
+
+    def test_recover_private_key_by_liner_k(self):
+        # k2 = k1 * 167 + 100
+        sig1 = self.sm2.sign_with_sm3(
+            b"hello world",
+            self.private_key2,
+            self.public_key2,
+            randomk=0x11223344556677889900AABBCCDDEEFF112233445566778899,
+        )
+        r1 = 0xB99264F02A62CED3E15CD9FDDDC7E9E6AAE1EA3DE3A7FF1862DDADBEE0DD1552
+        s1 = 0x979009120D425DC863E67FF3DE0F2F667EAA2139FD8EEFC089C69EBFCAFBDD7D
+
+        sig2 = self.sm2.sign_with_sm3(
+            b"hello world",
+            self.private_key2,
+            self.public_key2,
+            randomk=0xB2D4F7193B5D7FA1BCF6F6082A4C6E8642D4F7193B5D7FA1C33,
+        )
+        r2 = 0x0813AFAE0180E82F6BE2CC91FA908CECE80B6DB47667321A0D9FBA6D828C7C66
+        s2 = 0x120DBE91124920B60A0251B85F1CF0788AB56600F12FF48D9E78E95F71BE879C
+        d = self.sm2.recover_private_key_by_liner_k(r1, s1, r2, s2, 167, 100)
+        self.assertEqual(d, self.private_key2)

@@ -202,11 +202,7 @@ class SM2(object):
         # k = s + (r + s) d mod n
         # s1 + (r1 + s1) d = s2 + (r2 + s2) d mod n
         # s1 - s2 = (r2 + s2 - r1 - s1) d mod n
-        return (
-            (s1 - s2)
-            * pow(r2 + s2 - r1 - s1, -1, self.curve.field.n)
-            % self.curve.field.n
-        )
+        return self.recover_private_key_by_liner_k(r1, s1, r2, s2, 1, 0)
 
     def recover_publicKeys_by_eAndrs(self, e: int, r: int, s: int):
         if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
@@ -245,3 +241,33 @@ class SM2(object):
             raise Exception("invalid signature")
 
         return (r1 - e1) % self.curve.field.n == (r2 - e2) % self.curve.field.n
+
+    # Thanks https://github.com/GoldSaintEagle/ECDSA-SM2-Signing-Attack/blob/master/attack.go#L108
+    def recover_private_key_by_liner_k(
+        self, r1: int, s1: int, r2: int, s2: int, a: int, b: int
+    ):
+        if (
+            r1 < 1
+            or r1 > self.curve.field.n - 1
+            or r2 < 1
+            or r2 > self.curve.field.n - 1
+            or s1 < 1
+            or s1 > self.curve.field.n - 1
+            or s2 < 1
+            or s2 > self.curve.field.n - 1
+        ):  # type: ignore
+            raise Exception("invalid signature")
+        # k2 = ak1 + b
+        # K2 = aK1 + bG
+        # K1 = (x1,y1) = s1G + t1P
+        # K2 = (x2,y2) = s2G + t2P
+        # s2G + t2P = a(s1G + t1P) + bG
+        # s2 + t2d = a(s1 + t1d) + b
+        # d (t2-at1) = b - s2 + as1
+        t1 = (r1 + s1) % self.curve.field.n
+        t2 = (r2 + s2) % self.curve.field.n
+        return (
+            (b - s2 + a * s1)
+            * pow(t2 - a * t1, -1, self.curve.field.n)
+            % self.curve.field.n
+        )
