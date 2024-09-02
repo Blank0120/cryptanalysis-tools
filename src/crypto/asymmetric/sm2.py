@@ -233,3 +233,15 @@ class SM2(object):
             public_keys.append((public_key.x, public_key.y))
         # so you can use diffterent public key to verify the same signature
         return public_keys
+
+    def is_same_k(self, r1, e1, r2, e2):
+        # r = (e + x1) mod n
+        if (
+            r1 < 1
+            or r1 > self.curve.field.n - 1
+            or r2 < 1
+            or r2 > self.curve.field.n - 1
+        ):  # type: ignore
+            raise Exception("invalid signature")
+
+        return (r1 - e1) % self.curve.field.n == (r2 - e2) % self.curve.field.n
