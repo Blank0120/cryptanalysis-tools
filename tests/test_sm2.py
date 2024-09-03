@@ -1,3 +1,4 @@
+import random
 import sys
 import unittest
 
@@ -5,6 +6,7 @@ sys.path.append("./src")
 from Cryptodome.Util.asn1 import DerInteger, DerSequence
 
 from crypto.asymmetric import sm2
+from crypto.hash import sm3
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from crypto.utils.types import asn1_str
 
@@ -156,3 +158,45 @@ class TestSM2(unittest.TestCase):
         s2 = 0x120DBE91124920B60A0251B85F1CF0788AB56600F12FF48D9E78E95F71BE879C
         d = self.sm2.recover_private_key_by_liner_k(r1, s1, r2, s2, 167, 100)
         self.assertEqual(d, self.private_key2)
+
+    def test_forge_e_signature1(self):
+        r1 = 0xB99264F02A62CED3E15CD9FDDDC7E9E6AAE1EA3DE3A7FF1862DDADBEE0DD1552
+        s1 = 0x979009120D425DC863E67FF3DE0F2F667EAA2139FD8EEFC089C69EBFCAFBDD7D
+        # t = r + s
+        e, r, s = self.sm2.forge_e_signature(self.public_key2, s1, r1 + s1)
+        ZA = self.sm2.compute_ZA(self.public_key2)
+        self.assertEqual(long_to_bytes(e), sm3.hash(ZA + b"hello world"))
+        self.assertEqual(
+            r, 0xB99264F02A62CED3E15CD9FDDDC7E9E6AAE1EA3DE3A7FF1862DDADBEE0DD1552
+        )
+        self.assertEqual(
+            s, 0x979009120D425DC863E67FF3DE0F2F667EAA2139FD8EEFC089C69EBFCAFBDD7D
+        )
+        self.assertTrue(
+            self.sm2.verify(
+                asn1_str(DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()),
+                long_to_bytes(e),
+                self.public_key2,
+            )
+        )
+
+    def test_forge_e_signature2(self):
+        r1 = random.randint(
+            0x1111111111111111111111111111111111111111111111111111111111111111,
+            self.sm2.curve.field.n - 1,
+        )
+        s1 = random.randint(
+            0x1111111111111111111111111111111111111111111111111111111111111111,
+            self.sm2.curve.field.n - 1,
+        )
+        # t = r + s
+        e, r, s = self.sm2.forge_e_signature(self.public_key2, s1, r1 + s1)
+        self.assertEqual(r, r1)
+        self.assertEqual(s, s1)
+        self.assertTrue(
+            self.sm2.verify(
+                asn1_str(DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()),
+                long_to_bytes(e),
+                self.public_key2,
+            )
+        )

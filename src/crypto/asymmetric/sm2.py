@@ -71,7 +71,7 @@ class SM2(object):
     def compute_ZA(
         self,
         public_key: Tuple[int, int],
-        ID: str | None,
+        ID: str | None = None,
     ):
         if ID is None:
             ID = "1234567812345678"
@@ -271,3 +271,9 @@ class SM2(object):
             * pow(t2 - a * t1, -1, self.curve.field.n)
             % self.curve.field.n
         )
+
+    def forge_e_signature(self, public_key: Tuple[int, int], s: int, t: int):
+        K = s * self.curve.g + t * ec.Point(self.curve, *public_key)
+        r: int = (t - s) % self.curve.field.n
+        e: int = (r - K.x) % self.curve.field.n  # type: ignore
+        return e, r, s
