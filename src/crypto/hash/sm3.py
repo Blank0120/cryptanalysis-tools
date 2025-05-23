@@ -6,6 +6,8 @@ import numpy as np
 from ..utils.rotl import rotl
 
 DIGEST_LENGTH = 256
+# The SM3 Cryptographic Hash Function draft-oscca-cfrg-sm3-02
+# https://datatracker.ietf.org/doc/html/draft-oscca-cfrg-sm3-02.html
 
 # 4.  Primitives And Functions
 IV = [
