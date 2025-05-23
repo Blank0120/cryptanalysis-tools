@@ -32,9 +32,16 @@ def T(t: int) -> int:
 	return L(int.from_bytes(bytes(s_box_res)))
 
 # 非线性变换 r
-# def r(a1, a2, a3, a4):
-# 	return [SM4_BOX[0][a1], SM4_BOX[1][a2], SM4_BOX[2][a3], SM4_BOX[3][a4]]
+def r(a1: int, a2: int, a3: int, a4: int):
+	return [
+		SM4_BOX[a1.to_bytes(1)[0]][a1.to_bytes(1)[0]],
+		SM4_BOX[a2.to_bytes(1)[0]][a2.to_bytes(1)[0]],
+		SM4_BOX[a3.to_bytes(1)[0]][a3.to_bytes(1)[0]],
+		SM4_BOX[a4.to_bytes(1)[0]][a4.to_bytes(1)[0]],
+	]
 
 # 线性变换 L
 def L(b: int) -> int:
 	return b ^ rotl(b, 2) ^ rotl(b, 10) ^ rotl(b, 18) ^ rotl(b, 24)
+
+
