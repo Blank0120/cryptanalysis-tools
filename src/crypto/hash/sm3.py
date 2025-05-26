@@ -1,3 +1,5 @@
+# The SM3 Cryptographic Hash Function draft-oscca-cfrg-sm3-02
+# https://datatracker.ietf.org/doc/html/draft-oscca-cfrg-sm3-02.html
 import builtins
 from math import floor
 
