@@ -166,12 +166,8 @@ class TestSM2(unittest.TestCase):
         e, r, s = self.sm2.forge_e_signature(self.public_key2, s1, r1 + s1)
         ZA = self.sm2.compute_ZA(self.public_key2)
         self.assertEqual(long_to_bytes(e), sm3.hash(ZA + b"hello world"))
-        self.assertEqual(
-            r, 0xB99264F02A62CED3E15CD9FDDDC7E9E6AAE1EA3DE3A7FF1862DDADBEE0DD1552
-        )
-        self.assertEqual(
-            s, 0x979009120D425DC863E67FF3DE0F2F667EAA2139FD8EEFC089C69EBFCAFBDD7D
-        )
+        self.assertEqual(r, r1)
+        self.assertEqual(s, s1)
         self.assertTrue(
             self.sm2.verify(
                 asn1_str(DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()),

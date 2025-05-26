@@ -2,8 +2,7 @@
 # https://datatracker.ietf.org/doc/html/draft-oscca-cfrg-sm3-02.html
 import builtins
 from math import floor
-
-import numpy as np
+from struct import pack, unpack
 
 from ..utils.rotl import rotl
 
@@ -69,7 +68,7 @@ def padding(msg: bytes) -> bytes:
 # 5.3.  Iterative Hashing
 # 5.3.2.  Message Expansion Function ME
 def ME(B_i: bytes) -> tuple[list[int], list[int]]:
-    W_ = np.frombuffer(B_i, dtype=">u4").tolist()
+    W_ = list(unpack(">16I", B_i))
     for j in range(16, 67 + 1):
         W_.append(
             P_1(W_[j - 16] ^ W_[j - 9] ^ (rotl(W_[j - 3], 15)))
@@ -127,5 +126,5 @@ def hash(msg: bytes | str) -> bytes:
         w_, w_1_ = ME(B[i])
         V = CF(V, w_, w_1_)
 
-    result = np.array(V, dtype=">u4").tobytes()
+    result = pack(">8I", *V)
     return result
