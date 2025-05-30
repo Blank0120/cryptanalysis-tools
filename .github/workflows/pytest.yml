@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   deploy-test-coverage-report:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
@@ -21,7 +21,7 @@ jobs:
         pip install .
         pip install coverage
 
-    - name: Fuck, wasted my whole day!!!
+    - name: Fuck, wasted my whole day !!!
       # so coverage html will genernate .gitignore to ignore all files in htmlcov dir
       # but ignore file can not deploy to github pages
       run: |
