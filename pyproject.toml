@@ -1,0 +1,12 @@
+[project]
+name = "cryptanalysis-tools"
+version = "0.1.0"
+description = "sm crypto or more, cryptanalysis tools, toys"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pycryptodome>=3.23.0",
+    "pycryptodomex>=3.23.0",
+    "sympy>=1.14.0",
+    "tinyec>=0.4.0",
+]
