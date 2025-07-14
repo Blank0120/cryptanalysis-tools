@@ -3,12 +3,12 @@ import sys
 import unittest
 
 sys.path.append("./src")
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 from Cryptodome.Util.asn1 import DerInteger, DerSequence
 
-from crypto.asymmetric import sm2
-from crypto.hash import sm3
-from Crypto.Util.number import bytes_to_long, long_to_bytes
-from crypto.utils.types import asn1_str
+from cryptanalysis_tools.crypto.asymmetric import sm2
+from cryptanalysis_tools.crypto.hash import sm3
+from cryptanalysis_tools.crypto.utils.types import asn1_str
 
 
 class TestSM2(unittest.TestCase):

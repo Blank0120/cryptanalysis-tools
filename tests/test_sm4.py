@@ -2,7 +2,7 @@ import sys
 import unittest
 
 sys.path.append("./src")
-from crypto.symmetric import sm4
+from cryptanalysis_tools.crypto.symmetric import sm4
 
 
 class TestSM4(unittest.TestCase):
