@@ -2,7 +2,7 @@ import sys
 import unittest
 
 sys.path.append("./src")
-from crypto.hash import sm3
+from cryptanalysis_tools.crypto.hash import sm3
 
 
 class TestSM3(unittest.TestCase):

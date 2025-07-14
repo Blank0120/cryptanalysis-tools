@@ -2,7 +2,7 @@ import sys
 import unittest
 
 sys.path.append("./src")
-from crypto.symmetric import modes
+from cryptanalysis_tools.crypto.symmetric import modes
 
 
 class TestModes(unittest.TestCase):

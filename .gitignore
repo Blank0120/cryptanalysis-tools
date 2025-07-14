@@ -5,3 +5,4 @@ __pycache__
 htmlcov
 *.sage.py
 .DS_Store
+dist/
