@@ -82,7 +82,9 @@ def ME(B_i: bytes) -> tuple[list[int], list[int]]:
 
 
 # 5.3.3.  Compression Function CF
-def CF(v_i: list[int], w_: list[int], w_1_: list[int]):
+def CF(v_i: list[int], B_i: bytes):
+    w_, w_1_ = ME(B_i)
+
     a, b, c, d, e, f, g, h = v_i
 
     for j in range(0, 64):
@@ -123,8 +125,7 @@ def hash(msg: bytes | str) -> bytes:
 
     V = IV
     for i in range(0, group_count):
-        w_, w_1_ = ME(B[i])
-        V = CF(V, w_, w_1_)
+        V = CF(V, B[i])
 
     result = pack(">8I", *V)
     return result
