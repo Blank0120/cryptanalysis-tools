@@ -1,7 +1,11 @@
 from math import ceil
+from typing import TypeAlias
 
-from ..hash import sm3
+from .hash import sm3
 
+rotl = lambda x, n: ((x << n) & 0xFFFFFFFF) | ((x >> (32 - n)) & 0xFFFFFFFF)  # noqa: E731
+
+asn1str: TypeAlias = str
 
 # /* X9.63 with no salt happens to match the KDF used in SM2 */
 # Key derivation function from X9.63/SECG
@@ -18,3 +22,12 @@ def ansi_x963_with_nosalt_kdf(z: bytes, klen):
         ct += 1
     K = Ha
     return K[: ceil(klen / 8)]
+
+def str_to_bytes(string: str | bytes):
+    if isinstance(string, str):
+        string_bytes = string.encode("utf-8")
+    elif isinstance(string, bytes):
+        string_bytes = string
+    else:
+        raise ValueError(f"Invalid type: {type(string)}")
+    return string_bytes

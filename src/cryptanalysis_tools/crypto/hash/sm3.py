@@ -1,10 +1,9 @@
 # The SM3 Cryptographic Hash Function draft-oscca-cfrg-sm3-02
 # https://datatracker.ietf.org/doc/html/draft-oscca-cfrg-sm3-02.html
-import builtins
 from math import floor
 from struct import pack, unpack
 
-from ..utils.rotl import rotl
+from ..utils import rotl, str_to_bytes
 
 DIGEST_LENGTH = 256
 
@@ -109,15 +108,9 @@ def CF(v_i: list[int], B_i: bytes):
 
 # 5.3.1.  Iterative Compression Process
 def hash(msg: bytes | str) -> bytes:
-    match type(msg):
-        case builtins.str:
-            msg_bytes = msg.encode("utf-8")  # type: ignore
-        case builtins.bytes:
-            msg_bytes = msg
-        case _:
-            raise ValueError(f"Invalid type: {type}")
+    msg_bytes = str_to_bytes(msg)
 
-    msg_bytes = padding(msg_bytes)  # type: ignore
+    msg_bytes = padding(msg_bytes)
 
     group_count = round(len(msg_bytes) / 64)
 

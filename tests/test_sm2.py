@@ -1,6 +1,7 @@
 import random
 import sys
 import unittest
+from typing import Tuple, cast
 
 sys.path.append("./src")
 from Crypto.Util.number import bytes_to_long, long_to_bytes
@@ -8,7 +9,6 @@ from Cryptodome.Util.asn1 import DerInteger, DerSequence
 
 from cryptanalysis_tools.crypto.asymmetric import sm2
 from cryptanalysis_tools.crypto.hash import sm3
-from cryptanalysis_tools.crypto.utils.types import asn1_str
 
 
 class TestSM2(unittest.TestCase):
@@ -34,7 +34,13 @@ class TestSM2(unittest.TestCase):
             b"hello world", self.private_key, self.public_key
         )
         result = self.sm2.verify_with_sm3(
-            asn1_str(signature), b"hello world", self.public_key
+            signature, b"hello world", self.public_key
+        )
+        self.assertTrue(result)
+
+        r, s = cast(Tuple[int, int], DerSequence().decode(bytes.fromhex(signature)))
+        result = self.sm2.verify_with_sm3(
+            (r, s), b"hello world", self.public_key
         )
         self.assertTrue(result)
 
@@ -43,7 +49,13 @@ class TestSM2(unittest.TestCase):
             b"hello world", self.private_key, self.public_key, "8765432112345678"
         )
         result = self.sm2.verify_with_sm3(
-            asn1_str(signature), b"hello world", self.public_key, "8765432112345678"
+            signature, b"hello world", self.public_key, "8765432112345678"
+        )
+        self.assertTrue(result)
+
+        r, s = cast(Tuple[int, int], DerSequence().decode(bytes.fromhex(signature)))
+        result = self.sm2.verify_with_sm3(
+            (r, s), b"hello world", self.public_key, "8765432112345678"
         )
         self.assertTrue(result)
 
@@ -52,23 +64,23 @@ class TestSM2(unittest.TestCase):
             b"hello world", self.private_key, self.public_key, "8765432112345678", 0x12
         )
         result = self.sm2.verify_with_sm3(
-            asn1_str(signature), b"hello world", self.public_key, "8765432112345678"
+            signature, b"hello world", self.public_key, "8765432112345678"
         )
         self.assertTrue(result)
 
     def test_sign_with_random_k(self):
         signature = self.sm2.sign(b"hello world", self.private_key)
-        result = self.sm2.verify(asn1_str(signature), b"hello world", self.public_key)
+        result = self.sm2.verify(signature, b"hello world", self.public_key)
         self.assertTrue(result)
 
     def test_sign_with_fixed_k(self):
         signature = self.sm2.sign(b"hello world", self.private_key, 0x1234567812345678)
-        result = self.sm2.verify(asn1_str(signature), b"hello world", self.public_key)
+        result = self.sm2.verify(signature, b"hello world", self.public_key)
         self.assertTrue(result)
 
     def test_encrypt_decrypt(self):
         cipher = self.sm2.encrypt(b"hello world", self.public_key)
-        res = self.sm2.decrypt(asn1_str(cipher), self.private_key)
+        res = self.sm2.decrypt(cipher, self.private_key)
         self.assertEqual(res, b"hello world")
 
     def test_recover_privateKey_by_kAndrs(self):
@@ -114,7 +126,7 @@ class TestSM2(unittest.TestCase):
         self.assertIn((P["x"], P["y"]), public_keys1)
         for public_key in public_keys1:
             ret = self.sm2.verify(
-                asn1_str(DerSequence([DerInteger(r1), DerInteger(s1)]).encode().hex()),
+                DerSequence([DerInteger(r1), DerInteger(s1)]).encode().hex(),
                 long_to_bytes(e11),
                 public_key,
             )
@@ -124,7 +136,7 @@ class TestSM2(unittest.TestCase):
         self.assertIn((P["x"], P["y"]), public_keys2)
         for public_key in public_keys2:
             ret = self.sm2.verify(
-                asn1_str(DerSequence([DerInteger(r2), DerInteger(s2)]).encode().hex()),
+                DerSequence([DerInteger(r2), DerInteger(s2)]).encode().hex(),
                 long_to_bytes(e12),
                 public_key,
             )
@@ -170,7 +182,7 @@ class TestSM2(unittest.TestCase):
         self.assertEqual(s, s1)
         self.assertTrue(
             self.sm2.verify(
-                asn1_str(DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()),
+                DerSequence([DerInteger(r), DerInteger(s)]).encode().hex(),
                 long_to_bytes(e),
                 self.public_key2,
             )
@@ -191,7 +203,7 @@ class TestSM2(unittest.TestCase):
         self.assertEqual(s, s1)
         self.assertTrue(
             self.sm2.verify(
-                asn1_str(DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()),
+                DerSequence([DerInteger(r), DerInteger(s)]).encode().hex(),
                 long_to_bytes(e),
                 self.public_key2,
             )

@@ -17,7 +17,7 @@ sign(self, data: bytes, private_key: int, k: int | None = None)
 
 ### verify
 ```python
-verify(self, signature: asn1_str, data: bytes, public_key: Tuple[int, int])
+verify(self, signature: asn1str | Tuple[int, int], data: bytes, public_key: Tuple[int, int])
 ```
 
 ### compute_ZA
@@ -35,7 +35,7 @@ sign_with_sm3(self, data: bytes, private_key: int, public_key: Tuple[int, int], 
 
 ### verify_with_sm3
 ```python
-verify_with_sm3(self, signature: asn1_str, data: bytes, public_key: Tuple[int, int], ID: str | None = None)
+verify_with_sm3(self, signature: asn1str | Tuple[int, int], data: bytes, public_key: Tuple[int, int], ID: str | None = None)
 ```
 
 ### encrypt
@@ -45,7 +45,7 @@ encrypt(self, msg: bytes, public_key: Tuple[int, int], k: int | None = None)
 
 ### decrypt
 ```python
-decrypt(self, cipher_txt: asn1_str, private_key: int)
+decrypt(self, cipher_txt: asn1str, private_key: int)
 ```
 
 ### recover_privateKey_by_kAndrs
@@ -115,9 +115,7 @@ rotl(x, n)
 
 ### types
 ```python
-asn1_str = NewType("asn1_str", str)
-base64_str = NewType("base64_str", str)
-hex_str = NewType("hex_str", str)
+asn1str: TypeAlias = str
 ```
 
 # TODO :dart:

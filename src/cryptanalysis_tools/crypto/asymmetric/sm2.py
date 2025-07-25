@@ -1,13 +1,13 @@
 import random
-from typing import List, Tuple
+from typing import List, Tuple, cast
 
 from Cryptodome.Util.asn1 import DerInteger, DerOctetString, DerSequence
 from sympy import sqrt_mod
 from tinyec import ec
 
 from ..hash import sm3
-from ..utils import kdf
-from ..utils.types import asn1_str
+from ..utils import ansi_x963_with_nosalt_kdf as kdf
+from ..utils import asn1str
 
 
 class SM2(object):
@@ -33,7 +33,7 @@ class SM2(object):
             sm2_curve_param["a"], sm2_curve_param["b"], field, "sm2Curve"
         )
 
-    def sign(self, data: bytes, private_key: int, k: int | None = None):
+    def sign(self, data: bytes, private_key: int, k: int | None = None) -> asn1str:
         e = int.from_bytes(data)
         if k is None:
             k = random.randint(1, self.curve.field.n - 1)
@@ -53,15 +53,18 @@ class SM2(object):
 
         return DerSequence([DerInteger(r), DerInteger(s)]).encode().hex()
 
-    def verify(self, signature: asn1_str, data: bytes, public_key: Tuple[int, int]):
-        r, s = DerSequence().decode(bytes.fromhex(signature))
-        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+    def verify(self, signature: asn1str | Tuple[int, int], data: bytes, public_key: Tuple[int, int]) -> bool:
+        if isinstance(signature, tuple):
+            r, s = signature
+        else:
+            r, s = cast(Tuple[int, int], DerSequence().decode(bytes.fromhex(signature)))
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:
             raise Exception("invalid signature")
 
         public_key_point = ec.Point(self.curve, public_key[0], public_key[1])
 
         e = int.from_bytes(data)
-        t = (r + s) % self.curve.field.n  # type: ignore
+        t = (r + s) % self.curve.field.n
         if t == 0:
             raise Exception("signature error, r + s is zero")
 
@@ -102,7 +105,7 @@ class SM2(object):
 
     def verify_with_sm3(
         self,
-        signature: asn1_str,
+        signature: asn1str | Tuple[int, int],
         data: bytes,
         public_key: Tuple[int, int],
         ID: str | None = None,
@@ -110,7 +113,7 @@ class SM2(object):
         ZA = self.compute_ZA(public_key, ID)
         return self.verify(signature, sm3.hash(ZA + data), public_key)
 
-    def encrypt(self, msg: bytes, public_key: Tuple[int, int], k: int | None = None):
+    def encrypt(self, msg: bytes, public_key: Tuple[int, int], k: int | None = None) -> asn1str:
         public_key_point = ec.Point(self.curve, public_key[0], public_key[1])
         s = self.curve.field.h * public_key_point
         if isinstance(s, ec.Inf):
@@ -120,7 +123,7 @@ class SM2(object):
         c1 = k * self.curve.g
         secret_point = k * public_key_point
 
-        t = kdf.ansi_x963_with_nosalt_kdf(
+        t = kdf(
             secret_point.x.to_bytes(32) + secret_point.y.to_bytes(32),  # type: ignore
             len(msg) * 8,
         )
@@ -145,10 +148,10 @@ class SM2(object):
             .hex()
         )
 
-    def decrypt(self, cipher_txt: asn1_str, private_key: int):
-        c1x, c1y, c3, c2 = DerSequence().decode(bytes.fromhex(cipher_txt))
-        c3 = DerOctetString().decode(c3).payload  # type: ignore
-        c2 = DerOctetString().decode(c2).payload  # type: ignore
+    def decrypt(self, cipher_txt: asn1str, private_key: int):
+        c1x, c1y, c3, c2 = cast(Tuple[bytes, bytes, bytes, bytes], DerSequence().decode(bytes.fromhex(cipher_txt)))
+        c3 = DerOctetString().decode(c3).payload
+        c2 = DerOctetString().decode(c2).payload
 
         c1 = ec.Point(self.curve, c1x, c1y)
         s = self.curve.field.h * c1
@@ -157,7 +160,7 @@ class SM2(object):
 
         secret_point = private_key * c1
 
-        t = kdf.ansi_x963_with_nosalt_kdf(
+        t = kdf(
             secret_point.x.to_bytes(32) + secret_point.y.to_bytes(32),  # type: ignore
             len(c2) * 8,
         )
@@ -178,7 +181,7 @@ class SM2(object):
         return plain_txt
 
     def recover_privateKey_by_kAndrs(self, k: int, r: int, s: int):
-        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:
             raise Exception("invalid signature")
         # d = (k-s)(r + s)^-1 mod n
         return (k - s) * pow(r + s, -1, self.curve.field.n) % self.curve.field.n
@@ -189,14 +192,14 @@ class SM2(object):
             or r1 > self.curve.field.n - 1
             or s1 < 1
             or s1 > self.curve.field.n - 1
-        ):  # type: ignore
+        ):
             raise Exception("invalid signature r1 s1")
         if (
             r2 < 1
             or r2 > self.curve.field.n - 1
             or s2 < 1
             or s2 > self.curve.field.n - 1
-        ):  # type: ignore
+        ):
             raise Exception("invalid signature r2 s2")
         # r = x1 + e mod n
         # k = s + (r + s) d mod n
@@ -205,7 +208,7 @@ class SM2(object):
         return self.recover_private_key_by_liner_k(r1, s1, r2, s2, 1, 0)
 
     def recover_publicKeys_by_eAndrs(self, e: int, r: int, s: int):
-        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:  # type: ignore
+        if r < 1 or r > self.curve.field.n - 1 or s < 1 or s > self.curve.field.n - 1:
             raise Exception("invalid signature")
 
         x1: int = (r - e) % self.curve.field.n
@@ -237,7 +240,7 @@ class SM2(object):
             or r1 > self.curve.field.n - 1
             or r2 < 1
             or r2 > self.curve.field.n - 1
-        ):  # type: ignore
+        ):
             raise Exception("invalid signature")
 
         return (r1 - e1) % self.curve.field.n == (r2 - e2) % self.curve.field.n
@@ -255,7 +258,7 @@ class SM2(object):
             or s1 > self.curve.field.n - 1
             or s2 < 1
             or s2 > self.curve.field.n - 1
-        ):  # type: ignore
+        ):
             raise Exception("invalid signature")
         # k2 = ak1 + b
         # K2 = aK1 + bG

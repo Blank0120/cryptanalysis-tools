@@ -1,4 +1,4 @@
-import builtins
+from ..utils import str_to_bytes
 
 
 def ecb_encrypt(
@@ -10,13 +10,7 @@ def ecb_encrypt(
     if padding_type != 'pkcs7':
         raise ValueError(f"Unsupported padding type: {padding_type}")
 
-    match type(plaintext):
-        case builtins.str:
-            msg_bytes = plaintext.encode("utf-8")  # type: ignore
-        case builtins.bytes:
-            msg_bytes = plaintext
-        case _:
-            raise ValueError(f"Invalid type: {type(plaintext)}")
+    msg_bytes = str_to_bytes(plaintext)
 
     match block_cipher:
         case 'sm4':
@@ -25,7 +19,7 @@ def ecb_encrypt(
             # 若消息长度刚好符合块长度，则添加一个填充块
             # pkcs7 padding
             nPadding = 16 - (len(msg_bytes) & 0xF)
-            msg_bytes += nPadding * nPadding.to_bytes() # type: ignore
+            msg_bytes += nPadding * nPadding.to_bytes()
 
             ciphertext = b''
             for i in range(0, len(msg_bytes), 16):
@@ -43,7 +37,7 @@ def ecb_decrypt(
 ):
     if padding_type != 'pkcs7':
         raise ValueError(f"Unsupported padding type: {padding_type}")
-    
+
     if len(ciphertext) % 16 != 0:
         raise ValueError("Ciphertext length must be a multiple of 16 bytes.")
 
@@ -59,7 +53,7 @@ def ecb_decrypt(
 
         case _:
             raise ValueError(f"Invalid block_cipher: {block_cipher}")
-        
+
 def cbc_encrypt(
     block_cipher: str,
     plaintext: bytes | str,
@@ -70,13 +64,7 @@ def cbc_encrypt(
     if padding_type != 'pkcs7':
         raise ValueError(f"Unsupported padding type: {padding_type}")
 
-    match type(plaintext):
-        case builtins.str:
-            msg_bytes = plaintext.encode("utf-8")  # type: ignore
-        case builtins.bytes:
-            msg_bytes = plaintext
-        case _:
-            raise ValueError(f"Invalid type: {type(plaintext)}")
+    msg_bytes = str_to_bytes(plaintext)
 
     match block_cipher:
         case 'sm4':
@@ -87,7 +75,7 @@ def cbc_encrypt(
             # 若消息长度刚好符合块长度，则添加一个填充块
             # pkcs7 padding
             nPadding = 16 - (len(msg_bytes) & 0xF)
-            msg_bytes += nPadding * nPadding.to_bytes() # type: ignore
+            msg_bytes += nPadding * nPadding.to_bytes()
 
             ivciphertext = iv
             for i in range(0, len(msg_bytes), 16):
@@ -107,7 +95,7 @@ def cbc_decrypt(
 ):
     if padding_type != 'pkcs7':
         raise ValueError(f"Unsupported padding type: {padding_type}")
-    
+
     if len(ciphertext) % 16 != 0:
         raise ValueError("Ciphertext length must be a multiple of 16 bytes.")
 
