@@ -1,7 +1,7 @@
 > :warning: **警告**
-> 
+>
 > 本项目仅作个人学习使用，不可用于生产环境，否则后果自负。
-> 
+>
 > This library is only for learning purposes and can ```not``` be used in ```production``` environments. Otherwise, you will be at your own risk.
 
 > :memo: **可参考 tests 中的使用方法**
@@ -123,5 +123,7 @@ hex_str = NewType("hex_str", str)
 # TODO :dart:
 - [ ] sm2协同签名
 - [ ] CBC-MAC不定长攻击
-- [ ] M-D 结构 hash 长度拓展攻击
+- [ ] 对称密码逆序流程
+- [x] M-D 结构 hash 长度拓展攻击
 - [ ] padding oracle 填充攻击
+- [ ] hash collision 哈希碰撞
